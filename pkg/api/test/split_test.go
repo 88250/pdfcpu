@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/88250/pdfcpu/pkg/api"
 )
 
 func TestSplitSpan1(t *testing.T) {

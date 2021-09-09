@@ -17,7 +17,7 @@ limitations under the License.
 package pdfcpu
 
 import (
-	"github.com/pdfcpu/pdfcpu/pkg/log"
+	"github.com/88250/pdfcpu/pkg/log"
 )
 
 // CollectPages creates a new PDF Context for a custom PDF page sequence of the PDF represented by ctx.

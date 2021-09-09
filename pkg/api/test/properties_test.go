@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/88250/pdfcpu/pkg/api"
 )
 
 func listProperties(t *testing.T, msg, fileName string, want []string) []string {

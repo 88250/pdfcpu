@@ -20,9 +20,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pdfcpu/pdfcpu/pkg/api"
-	"github.com/pdfcpu/pdfcpu/pkg/cli"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
+	"github.com/88250/pdfcpu/pkg/api"
+	"github.com/88250/pdfcpu/pkg/cli"
+	"github.com/88250/pdfcpu/pkg/pdfcpu"
 )
 
 func testBooklet(t *testing.T, msg string, inFiles []string, outFile string, selectedPages []string, desc string, n int, isImg bool) {

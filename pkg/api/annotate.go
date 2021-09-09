@@ -17,12 +17,14 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
-	"github.com/pdfcpu/pdfcpu/pkg/log"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
+	"github.com/88250/pdfcpu/pkg/log"
+	"github.com/88250/pdfcpu/pkg/pdfcpu"
 	"github.com/pkg/errors"
 )
 
@@ -58,6 +60,39 @@ func ListAnnotationsFile(inFile string, selectedPages []string, conf *pdfcpu.Con
 	}
 	defer f.Close()
 	return ListAnnotations(f, selectedPages, conf)
+}
+
+func ListLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
+	f, err := os.Open(inFile)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	conf := pdfcpu.NewDefaultConfiguration()
+	conf.Cmd = pdfcpu.LISTANNOTATIONS
+	ctx, _, _, _, err := readValidateAndOptimize(f, conf, time.Now())
+	if err != nil {
+		return
+	}
+	if err := ctx.EnsurePageCount(); err != nil {
+		return
+	}
+
+	for _, anno := range ctx.PageAnnots {
+		for k, v := range anno {
+			if pdfcpu.AnnLink == k {
+				for _, va := range v {
+					link := va.ContentString()
+					if strings.HasPrefix(link, "toc://") {
+						fmt.Println(va)
+						ret = append(ret, va.(pdfcpu.LinkAnnotation))
+					}
+				}
+			}
+		}
+	}
+	return
 }
 
 // AddAnnotations adds annotations for selected pages in rs and writes the result to w.

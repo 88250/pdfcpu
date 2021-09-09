@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/pdfcpu/pdfcpu/pkg/types"
+	"github.com/88250/pdfcpu/pkg/types"
 	"github.com/pkg/errors"
 )
 

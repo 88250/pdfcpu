@@ -17,7 +17,7 @@ limitations under the License.
 package pdfcpu
 
 import (
-	"github.com/pdfcpu/pdfcpu/pkg/log"
+	"github.com/88250/pdfcpu/pkg/log"
 	"github.com/pkg/errors"
 )
 

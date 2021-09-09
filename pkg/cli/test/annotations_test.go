@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pdfcpu/pdfcpu/pkg/cli"
+	"github.com/88250/pdfcpu/pkg/cli"
 )
 
 func TestListAndRemoveAnnotations(t *testing.T) {

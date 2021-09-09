@@ -3,7 +3,7 @@
 package metrics
 
 import (
-	"github.com/pdfcpu/pdfcpu/pkg/types"
+	"github.com/88250/pdfcpu/pkg/types"
 )
 
 // WinAnsiGlyphMap is a glyph lookup table for CP1252 character codes.

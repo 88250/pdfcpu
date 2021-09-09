@@ -19,7 +19,7 @@ package api
 import (
 	"fmt"
 
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
+	"github.com/88250/pdfcpu/pkg/pdfcpu"
 )
 
 func ExampleValidateFile() {

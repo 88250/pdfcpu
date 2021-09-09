@@ -27,8 +27,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pdfcpu/pdfcpu/pkg/filter"
-	"github.com/pdfcpu/pdfcpu/pkg/log"
+	"github.com/88250/pdfcpu/pkg/filter"
+	"github.com/88250/pdfcpu/pkg/log"
 	"github.com/pkg/errors"
 )
 

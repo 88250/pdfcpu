@@ -23,9 +23,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pdfcpu/pdfcpu/pkg/api"
-	"github.com/pdfcpu/pdfcpu/pkg/font"
-	pdf "github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
+	"github.com/88250/pdfcpu/pkg/api"
+	"github.com/88250/pdfcpu/pkg/font"
+	pdf "github.com/88250/pdfcpu/pkg/pdfcpu"
 )
 
 func writeCoreFontDemoContent(p pdf.Page, fontName string) {
