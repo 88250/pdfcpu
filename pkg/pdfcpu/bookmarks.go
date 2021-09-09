@@ -38,6 +38,7 @@ type Bookmark struct {
 	Bold     bool
 	Italic   bool
 	Color    *SimpleColor
+	Level    int
 	Children []Bookmark
 	Parent   *Bookmark
 }
