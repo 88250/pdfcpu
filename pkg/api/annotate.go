@@ -17,7 +17,6 @@ limitations under the License.
 package api
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -62,7 +61,7 @@ func ListAnnotationsFile(inFile string, selectedPages []string, conf *pdfcpu.Con
 	return ListAnnotations(f, selectedPages, conf)
 }
 
-func ListLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
+func ListToCLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
 	f, err := os.Open(inFile)
 	if err != nil {
 		return
@@ -75,7 +74,7 @@ func ListLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
 	if err != nil {
 		return
 	}
-	if err := ctx.EnsurePageCount(); err != nil {
+	if err = ctx.EnsurePageCount(); err != nil {
 		return
 	}
 
@@ -85,7 +84,6 @@ func ListLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
 				for _, va := range v {
 					link := va.ContentString()
 					if strings.HasPrefix(link, "toc://") {
-						fmt.Println(va)
 						ret = append(ret, va.(pdfcpu.LinkAnnotation))
 					}
 				}
