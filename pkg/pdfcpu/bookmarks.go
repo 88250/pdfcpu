@@ -39,7 +39,7 @@ type Bookmark struct {
 	Italic   bool
 	Color    *SimpleColor
 	Level    int
-	Children []Bookmark
+	Children []*Bookmark
 	Parent   *Bookmark
 }
 
@@ -145,8 +145,8 @@ func (ctx *Context) PageObjFromDestinationArray(dest Object) (*IndirectRef, erro
 }
 
 // BookmarksForOutlineItem returns the bookmarks tree for an outline item.
-func (ctx *Context) BookmarksForOutlineItem(item *IndirectRef, parent *Bookmark) ([]Bookmark, error) {
-	bms := []Bookmark{}
+func (ctx *Context) BookmarksForOutlineItem(item *IndirectRef, parent *Bookmark) ([]*Bookmark, error) {
+	bms := []*Bookmark{}
 
 	d, err := ctx.DereferenceDict(*item)
 	if err != nil {
@@ -214,14 +214,14 @@ func (ctx *Context) BookmarksForOutlineItem(item *IndirectRef, parent *Bookmark)
 			newBookmark.Children = children
 		}
 
-		bms = append(bms, newBookmark)
+		bms = append(bms, &newBookmark)
 	}
 
 	return bms, nil
 }
 
 // BookmarksForOutline returns all ctx bookmark information recursively.
-func (ctx *Context) BookmarksForOutline() ([]Bookmark, error) {
+func (ctx *Context) BookmarksForOutline() ([]*Bookmark, error) {
 	_, first, err := ctx.positionToOutlineTreeLevel1()
 	if err != nil {
 		return nil, err
@@ -230,7 +230,7 @@ func (ctx *Context) BookmarksForOutline() ([]Bookmark, error) {
 	return ctx.BookmarksForOutlineItem(first, nil)
 }
 
-func createOutlineItemDict(ctx *Context, bms []Bookmark, parent *IndirectRef, parentPageNr *int) (*IndirectRef, *IndirectRef, int, error) {
+func createOutlineItemDict(ctx *Context, bms []*Bookmark, parent *IndirectRef, parentPageNr *int) (*IndirectRef, *IndirectRef, int, error) {
 	var (
 		first  *IndirectRef
 		irPrev *IndirectRef
@@ -304,7 +304,7 @@ func createOutlineItemDict(ctx *Context, bms []Bookmark, parent *IndirectRef, pa
 }
 
 // AddBookmarks adds bms to ctx.
-func (ctx *Context) AddBookmarks(bms []Bookmark) error {
+func (ctx *Context) AddBookmarks(bms []*Bookmark) error {
 
 	rootDict, err := ctx.Catalog()
 	if err != nil {
