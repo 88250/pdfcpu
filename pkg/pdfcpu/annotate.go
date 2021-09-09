@@ -360,6 +360,7 @@ func (ann TextAnnotation) RenderDict(pageIndRef IndirectRef) Dict {
 type LinkAnnotation struct {
 	Annotation
 	URI  string
+	Page int
 	Quad QuadPoints // Shall be ignored if any coordinate lies outside the region specified by Rect.
 }
 

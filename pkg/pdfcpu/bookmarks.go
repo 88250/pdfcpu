@@ -33,6 +33,7 @@ var (
 type Bookmark struct {
 	Title    string
 	PageFrom int
+	AbsPos   float64
 	PageThru int // for extraction only; >= pageFrom and reaches until before pageFrom of the next bookmark.
 	Bold     bool
 	Italic   bool
@@ -246,18 +247,13 @@ func createOutlineItemDict(ctx *Context, bms []Bookmark, parent *IndirectRef, pa
 			return nil, nil, 0, errCorruptedBookmarks
 		}
 
-		_, pageIndRef, _, err := ctx.PageDict(bm.PageFrom, false)
-		if err != nil {
-			return nil, nil, 0, err
-		}
-
 		s, err := Escape(encodeUTF16String(bm.Title))
 		if err != nil {
 			return nil, nil, 0, err
 		}
 
 		d := Dict(map[string]Object{
-			"Dest":   Array{*pageIndRef, Name("Fit")},
+			"Dest":   Array{Integer(bm.PageFrom - 1), Name("XYZ"), nil, Float(bm.AbsPos), nil},
 			"Title":  StringLiteral(*s),
 			"Parent": *parent},
 		)

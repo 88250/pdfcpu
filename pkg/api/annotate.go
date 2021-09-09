@@ -78,13 +78,15 @@ func ListToCLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
 		return
 	}
 
-	for _, anno := range ctx.PageAnnots {
-		for k, v := range anno {
+	for pg, annos := range ctx.PageAnnots {
+		for k, v := range annos {
 			if pdfcpu.AnnLink == k {
 				for _, va := range v {
 					link := va.ContentString()
 					if strings.HasPrefix(link, "toc://") {
-						ret = append(ret, va.(pdfcpu.LinkAnnotation))
+						l := va.(pdfcpu.LinkAnnotation)
+						l.Page = pg
+						ret = append(ret, l)
 					}
 				}
 			}
