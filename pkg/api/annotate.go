@@ -83,7 +83,7 @@ func ListToCLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
 			if pdfcpu.AnnLink == k {
 				for _, va := range v {
 					link := va.ContentString()
-					if strings.HasPrefix(link, "toc://") {
+					if strings.HasPrefix(link, "pdf-outline://") {
 						l := va.(pdfcpu.LinkAnnotation)
 						l.Page = pg
 						ret = append(ret, l)
