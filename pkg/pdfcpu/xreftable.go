@@ -429,6 +429,26 @@ func (xRefTable *XRefTable) NewEmbeddedStreamDict(r io.Reader, modDate time.Time
 	return xRefTable.IndRefForNewObject(*sd)
 }
 
+// SiYuan
+func (xRefTable *XRefTable) NewFileSpectDictForAttachment1(a Attachment) (ref *IndirectRef, d Dict, err error) {
+	modTime := time.Now()
+	if a.ModTime != nil {
+		modTime = *a.ModTime
+	}
+	sd, err := xRefTable.NewEmbeddedStreamDict(a, modTime)
+	if err != nil {
+		return
+	}
+
+	d, err = xRefTable.NewFileSpecDict(a.ID, encodeUTF16String(a.ID), a.Desc, *sd)
+	if err != nil {
+		return
+	}
+
+	ref, err = xRefTable.IndRefForNewObject(d)
+	return
+}
+
 // NewFileSpectDictForAttachment returns a fileSpecDict for a.
 func (xRefTable *XRefTable) NewFileSpectDictForAttachment(a Attachment) (*IndirectRef, error) {
 	modTime := time.Now()

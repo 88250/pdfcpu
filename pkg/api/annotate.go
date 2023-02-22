@@ -61,6 +61,7 @@ func ListAnnotationsFile(inFile string, selectedPages []string, conf *pdfcpu.Con
 	return ListAnnotations(f, selectedPages, conf)
 }
 
+// ListToCLinks 返回 PDF 中的大纲链接。
 func ListToCLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
 	f, err := os.Open(inFile)
 	if err != nil {
@@ -92,7 +93,64 @@ func ListToCLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
 			}
 		}
 	}
+
 	return
+}
+
+// ListAssetLinks 返回 PDF 中的资源文件链接。
+// SiYuan
+func ListAssetLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
+	f, err := os.Open(inFile)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	conf := pdfcpu.NewDefaultConfiguration()
+	conf.Cmd = pdfcpu.LISTANNOTATIONS
+	ctx, _, _, _, err := readValidateAndOptimize(f, conf, time.Now())
+	if err != nil {
+		return
+	}
+	if err = ctx.EnsurePageCount(); err != nil {
+		return
+	}
+
+	for pg, annos := range ctx.PageAnnots {
+		for k, v := range annos {
+			if pdfcpu.AnnLink == k {
+				for _, va := range v {
+					link := va.ContentString()
+					if strings.HasPrefix(link, "http://127.0.0.1:6806/") && strings.Contains(link, "/assets/") {
+						l := va.(pdfcpu.LinkAnnotation)
+						l.Page = pg
+						ret = append(ret, l)
+					}
+				}
+			}
+		}
+	}
+	return
+}
+
+// ListAssetAttachments 返回 PDF 中的资源文件附件。
+// SiYuan
+func ListAssetAttachments(inFile string) (ret []pdfcpu.Attachment, err error) {
+	f, err := os.Open(inFile)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	conf := pdfcpu.NewDefaultConfiguration()
+	ctx, _, _, _, err := readValidateAndOptimize(f, conf, time.Now())
+	if err != nil {
+		return
+	}
+	if err = ctx.EnsurePageCount(); err != nil {
+		return
+	}
+	return ctx.ListAttachments()
 }
 
 // AddAnnotations adds annotations for selected pages in rs and writes the result to w.
