@@ -124,7 +124,8 @@ func AddPages(ctx, ctxDest *Context, pages []int, usePgCache bool) error {
 
 		// Move page i and required resources into new context.
 
-		consolidateRes := true
+		consolidateRes := false
+		// TODO consolidate via optimize flag
 		d, _, inhPAttrs, err := ctx.PageDict(i, consolidateRes)
 		if err != nil {
 			return err
@@ -138,7 +139,7 @@ func AddPages(ctx, ctxDest *Context, pages []int, usePgCache bool) error {
 
 		d = d.Clone().(Dict)
 
-		d["Resources"] = inhPAttrs.resources
+		d["Resources"] = inhPAttrs.Resources
 		d["Parent"] = *pagesIndRef
 
 		// Migrate external page dict into ctxDest.
@@ -147,9 +148,9 @@ func AddPages(ctx, ctxDest *Context, pages []int, usePgCache bool) error {
 		}
 
 		// Handle inherited page attributes.
-		d["MediaBox"] = inhPAttrs.mediaBox.Array()
-		if inhPAttrs.rotate%360 > 0 {
-			d["Rotate"] = Integer(inhPAttrs.rotate)
+		d["MediaBox"] = inhPAttrs.MediaBox.Array()
+		if inhPAttrs.Rotate%360 > 0 {
+			d["Rotate"] = Integer(inhPAttrs.Rotate)
 		}
 
 		indRef, err := ctxDest.IndRefForNewObject(d)

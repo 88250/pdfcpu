@@ -40,7 +40,7 @@ type Box struct {
 	MTop, MBot    float64
 	// Relative position within parent box
 	Dim    *Dim   // dimensions
-	Pos    anchor // position anchor within parent box, one of tl,tc,tr,l,c,r,bl,bc,br.
+	Pos    Anchor // position anchor within parent box, one of tl,tc,tr,l,c,r,bl,bc,br.
 	Dx, Dy int    // anchor offset
 }
 
@@ -937,7 +937,7 @@ func (ctx *Context) RemovePageBoundaries(selectedPages IntSet, pb *PageBoundarie
 		}
 		if pb.Crop != nil {
 			if oldVal := d.Delete("CropBox"); oldVal == nil {
-				d.Insert("CropBox", inhPAttrs.mediaBox.Array())
+				d.Insert("CropBox", inhPAttrs.MediaBox.Array())
 			}
 		}
 		if pb.Trim != nil {
@@ -953,7 +953,7 @@ func (ctx *Context) RemovePageBoundaries(selectedPages IntSet, pb *PageBoundarie
 	return nil
 }
 
-func boxLowerLeftCorner(r *Rectangle, w, h float64, a anchor) types.Point {
+func boxLowerLeftCorner(r *Rectangle, w, h float64, a Anchor) types.Point {
 	var p types.Point
 
 	switch a {
@@ -1009,13 +1009,17 @@ func boxByDim(boxName string, b *Box, d Dict, parent *Rectangle) *Rectangle {
 	}
 	ll := boxLowerLeftCorner(parent, w, h, b.Pos)
 	r := RectForWidthAndHeight(ll.X+float64(b.Dx), ll.Y+float64(b.Dy), w, h)
-	d.Update(boxName, r.Array())
+	if d != nil {
+		d.Update(boxName, r.Array())
+	}
 	return r
 }
 
-func applyBox(boxName string, b *Box, d Dict, parent *Rectangle) *Rectangle {
+func ApplyBox(boxName string, b *Box, d Dict, parent *Rectangle) *Rectangle {
 	if b.Rect != nil {
-		d.Update(boxName, b.Rect.Array())
+		if d != nil {
+			d.Update(boxName, b.Rect.Array())
+		}
 		return b.Rect
 	}
 
@@ -1036,7 +1040,9 @@ func applyBox(boxName string, b *Box, d Dict, parent *Rectangle) *Rectangle {
 	xmax := parent.UR.X - mRight
 	ymax := parent.UR.Y - mTop
 	r := Rect(xmin, ymin, xmax, ymax)
-	d.Update(boxName, r.Array())
+	if d != nil {
+		d.Update(boxName, r.Array())
+	}
 	if boxName != "CropBox" {
 		return r
 	}
@@ -1058,7 +1064,9 @@ func applyBox(boxName string, b *Box, d Dict, parent *Rectangle) *Rectangle {
 		if ymax > parent.UR.Y {
 			parent.UR.Y = ymax
 		}
-		d.Update("MediaBox", parent.Array())
+		if d != nil {
+			d.Update("MediaBox", parent.Array())
+		}
 	}
 	return r
 }
@@ -1071,12 +1079,12 @@ func applyBoxDefinitions(d Dict, pb *PageBoundaries, b *boxes) {
 	parentBox := b.mediaBox
 	if pb.Media != nil {
 		//fmt.Println("add mb")
-		b.mediaBox = applyBox("MediaBox", pb.Media, d, parentBox)
+		b.mediaBox = ApplyBox("MediaBox", pb.Media, d, parentBox)
 	}
 
 	if pb.Crop != nil {
 		//fmt.Println("add cb")
-		b.cropBox = applyBox("CropBox", pb.Crop, d, parentBox)
+		b.cropBox = ApplyBox("CropBox", pb.Crop, d, parentBox)
 	}
 
 	if b.cropBox != nil {
@@ -1084,17 +1092,17 @@ func applyBoxDefinitions(d Dict, pb *PageBoundaries, b *boxes) {
 	}
 	if pb.Trim != nil && pb.Trim.RefBox == "" {
 		//fmt.Println("add tb")
-		b.trimBox = applyBox("TrimBox", pb.Trim, d, parentBox)
+		b.trimBox = ApplyBox("TrimBox", pb.Trim, d, parentBox)
 	}
 
 	if pb.Bleed != nil && pb.Bleed.RefBox == "" {
 		//fmt.Println("add bb")
-		b.bleedBox = applyBox("BleedBox", pb.Bleed, d, parentBox)
+		b.bleedBox = ApplyBox("BleedBox", pb.Bleed, d, parentBox)
 	}
 
 	if pb.Art != nil && pb.Art.RefBox == "" {
 		//fmt.Println("add ab")
-		b.artBox = applyBox("ArtBox", pb.Art, d, parentBox)
+		b.artBox = ApplyBox("ArtBox", pb.Art, d, parentBox)
 	}
 }
 
@@ -1188,8 +1196,8 @@ func (ctx *Context) AddPageBoundaries(selectedPages IntSet, pb *PageBoundaries) 
 		if err != nil {
 			return err
 		}
-		mediaBox := inhPAttrs.mediaBox
-		cropBox := inhPAttrs.cropBox
+		mediaBox := inhPAttrs.MediaBox
+		cropBox := inhPAttrs.CropBox
 
 		var trimBox *Rectangle
 		obj, found := d.Find("TrimBox")
@@ -1244,7 +1252,7 @@ func (ctx *Context) Crop(selectedPages IntSet, b *Box) error {
 		if err != nil {
 			return err
 		}
-		applyBox("CropBox", b, d, inhPAttrs.mediaBox)
+		ApplyBox("CropBox", b, d, inhPAttrs.MediaBox)
 	}
 	return nil
 }

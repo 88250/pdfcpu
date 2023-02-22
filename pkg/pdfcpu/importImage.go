@@ -73,7 +73,7 @@ type Import struct {
 	PageSize string      // one of A0,A1,A2,A3,A4(=default),A5,A6,A7,A8,Letter,Legal,Ledger,Tabloid,Executive,ANSIC,ANSID,ANSIE.
 	UserDim  bool        // true if one of dimensions or paperSize provided overriding the default.
 	DPI      int         // destination resolution to apply in dots per inch.
-	Pos      anchor      // position anchor, one of tl,tc,tr,l,c,r,bl,bc,br,full.
+	Pos      Anchor      // position anchor, one of tl,tc,tr,l,c,r,bl,bc,br,full.
 	Dx, Dy   int         // anchor offset.
 	Scale    float64     // relative scale factor. 0 <= x <= 1
 	ScaleAbs bool        // true for absolute scaling.
@@ -105,7 +105,7 @@ func (imp Import) String() string {
 		imp.PageSize, *imp.PageDim, imp.Pos, imp.Dx, imp.Dy, imp.Scale, sc)
 }
 
-func parsePageFormat(v string) (*Dim, string, error) {
+func ParsePageFormat(v string) (*Dim, string, error) {
 
 	// Optional: appended last letter L indicates landscape mode.
 	// Optional: appended last letter P indicates portrait mode.
@@ -138,7 +138,7 @@ func parsePageFormatImp(s string, imp *Import) (err error) {
 	if imp.UserDim {
 		return errors.New("pdfcpu: only one of formsize(papersize) or dimensions allowed")
 	}
-	imp.PageDim, imp.PageSize, err = parsePageFormat(s)
+	imp.PageDim, imp.PageSize, err = ParsePageFormat(s)
 	imp.UserDim = true
 	return err
 }
@@ -174,9 +174,9 @@ func parseDimensionsImp(s string, imp *Import) (err error) {
 	return err
 }
 
-type anchor int
+type Anchor int
 
-func (a anchor) String() string {
+func (a Anchor) String() string {
 
 	switch a {
 
@@ -217,7 +217,7 @@ func (a anchor) String() string {
 
 // These are the defined anchors for relative positioning.
 const (
-	TopLeft anchor = iota
+	TopLeft Anchor = iota
 	TopCenter
 	TopRight
 	Left
@@ -229,8 +229,8 @@ const (
 	Full // special case, no anchor needed, imageSize = pageSize
 )
 
-func parsePositionAnchor(s string) (anchor, error) {
-	var a anchor
+func parsePositionAnchor(s string) (Anchor, error) {
+	var a Anchor
 	switch s {
 	case "tl", "topleft", "top-left":
 		a = TopLeft
@@ -319,14 +319,14 @@ func parseSepia(s string, imp *Import) error {
 	case "off", "false", "f":
 		imp.Sepia = false
 	default:
-		return errors.New("pdfcpu: import gray, please provide one of: on/off true/false")
+		return errors.New("pdfcpu: import sepia, please provide one of: on/off true/false")
 	}
 
 	return nil
 }
 
 func parseImportBackgroundColor(s string, imp *Import) error {
-	c, err := parseColor(s)
+	c, err := ParseColor(s)
 	if err != nil {
 		return err
 	}
@@ -372,7 +372,7 @@ func AppendPageTree(d1 *IndirectRef, countd1 int, d2 Dict) error {
 	return d2.IncrementBy("Count", countd1)
 }
 
-func lowerLeftCorner(vpw, vph, bbw, bbh float64, a anchor) types.Point {
+func lowerLeftCorner(vpw, vph, bbw, bbh float64, a Anchor) types.Point {
 
 	var p types.Point
 
@@ -425,7 +425,7 @@ func importImagePDFBytes(wr io.Writer, pageDim *Dim, imgWidth, imgHeight float64
 
 	bb := RectForDim(vpw, vph)
 	if imp.BgColor != nil {
-		FillRectStacked(wr, bb, *imp.BgColor)
+		FillRectNoBorder(wr, bb, *imp.BgColor)
 	}
 
 	if imp.Pos == Full {
@@ -477,7 +477,7 @@ func importImagePDFBytes(wr io.Writer, pageDim *Dim, imgWidth, imgHeight float64
 func NewPageForImage(xRefTable *XRefTable, r io.Reader, parentIndRef *IndirectRef, imp *Import) (*IndirectRef, error) {
 
 	// create image dict.
-	imgIndRef, w, h, err := createImageResource(xRefTable, r, imp.Gray, imp.Sepia)
+	imgIndRef, w, h, err := CreateImageResource(xRefTable, r, imp.Gray, imp.Sepia)
 	if err != nil {
 		return nil, err
 	}

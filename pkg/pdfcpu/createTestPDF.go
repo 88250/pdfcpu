@@ -29,7 +29,7 @@ var (
 	testAudioFileWAV = filepath.Join(testDir, "resources", "test.wav")
 )
 
-func createXRefTableWithRootDict() (*XRefTable, error) {
+func CreateXRefTableWithRootDict() (*XRefTable, error) {
 	xRefTable := &XRefTable{
 		Table:      map[int]*XRefTableEntry{},
 		Names:      map[string]*Node{},
@@ -42,7 +42,7 @@ func createXRefTableWithRootDict() (*XRefTable, error) {
 	one := 1
 	xRefTable.Size = &one
 
-	v := (V17)
+	v := V17
 	xRefTable.HeaderVersion = &v
 
 	xRefTable.PageCount = 0
@@ -68,7 +68,7 @@ func createXRefTableWithRootDict() (*XRefTable, error) {
 
 // CreateDemoXRef creates a minimal single page PDF file for demo purposes.
 func CreateDemoXRef(p Page) (*XRefTable, error) {
-	xRefTable, err := createXRefTableWithRootDict()
+	xRefTable, err := CreateXRefTableWithRootDict()
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func addPageTreeForResourceDictInheritanceDemo(xRefTable *XRefTable, rootDict Di
 
 	// Create root page node.
 
-	fIndRef, err := createFontDict(xRefTable, "Courier")
+	fIndRef, err := EnsureFontDict(xRefTable, "Courier", false, nil)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func addPageTreeForResourceDictInheritanceDemo(xRefTable *XRefTable, rootDict Di
 
 	// Create intermediate page node.
 
-	f100IndRef, err := createFontDict(xRefTable, "Courier-Bold")
+	f100IndRef, err := EnsureFontDict(xRefTable, "Courier-Bold", false, nil)
 	if err != nil {
 		return err
 	}
@@ -208,7 +208,7 @@ func addPageTreeForResourceDictInheritanceDemo(xRefTable *XRefTable, rootDict Di
 
 // CreateResourceDictInheritanceDemoXRef creates a page tree for testing resource dict inheritance.
 func CreateResourceDictInheritanceDemoXRef() (*XRefTable, error) {
-	xRefTable, err := createXRefTableWithRootDict()
+	xRefTable, err := CreateXRefTableWithRootDict()
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +345,7 @@ func createPostScriptCalculatorFunctionStreamDict(xRefTable *XRefTable) (*Indire
 }
 
 func addResources(xRefTable *XRefTable, pageDict Dict, fontName string) error {
-	fIndRef, err := createFontDict(xRefTable, fontName)
+	fIndRef, err := EnsureFontDict(xRefTable, fontName, true, nil)
 	if err != nil {
 		return err
 	}
@@ -1266,7 +1266,7 @@ func addRequirements(xRefTable *XRefTable, rootDict Dict) {
 func CreateAnnotationDemoXRef() (*XRefTable, error) {
 	fontName := "Helvetica"
 
-	xRefTable, err := createXRefTableWithRootDict()
+	xRefTable, err := CreateXRefTableWithRootDict()
 	if err != nil {
 		return nil, err
 	}
@@ -1395,7 +1395,7 @@ func createDownAppearanceForFormField(xRefTable *XRefTable, w, h float64) (*Indi
 	return xRefTable.IndRefForNewObject(*sd)
 }
 
-func createTextField(xRefTable *XRefTable, pageAnnots *Array, fontName string) (*IndirectRef, error) {
+func createFormTextField(xRefTable *XRefTable, pageAnnots *Array, fontName string) (*IndirectRef, error) {
 	// lower left corner
 	x := 100.0
 	y := 300.0
@@ -1421,7 +1421,7 @@ func createTextField(xRefTable *XRefTable, pageAnnots *Array, fontName string) (
 		return nil, err
 	}
 
-	fontDict, err := createFontDict(xRefTable, fontName)
+	fontDict, err := EnsureFontDict(xRefTable, fontName, true, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1546,7 +1546,7 @@ func createOffAppearance(xRefTable *XRefTable, resourceDict Dict, w, h float64) 
 }
 
 func createCheckBoxButtonField(xRefTable *XRefTable, pageAnnots *Array) (*IndirectRef, error) {
-	fontDict, err := createFontDict(xRefTable, "ZapfDingbats")
+	fontDict, err := EnsureFontDict(xRefTable, "ZapfDingbats", false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1627,7 +1627,7 @@ func createRadioButtonField(xRefTable *XRefTable, pageAnnots *Array) (*IndirectR
 		return nil, err
 	}
 
-	fontDict, err := createFontDict(xRefTable, "ZapfDingbats")
+	fontDict, err := EnsureFontDict(xRefTable, "ZapfDingbats", false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1839,7 +1839,7 @@ func createXFAArray(xRefTable *XRefTable) (Array, error) {
 func createAcroFormDict(xRefTable *XRefTable, fontName string) (Dict, Array, error) {
 	pageAnnots := Array{}
 
-	text, err := createTextField(xRefTable, &pageAnnots, fontName)
+	text, err := createFormTextField(xRefTable, &pageAnnots, fontName)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1885,7 +1885,7 @@ func createAcroFormDict(xRefTable *XRefTable, fontName string) (Dict, Array, err
 func CreateAcroFormDemoXRef() (*XRefTable, error) {
 	fontName := "Helvetica"
 
-	xRefTable, err := createXRefTableWithRootDict()
+	xRefTable, err := CreateXRefTableWithRootDict()
 	if err != nil {
 		return nil, err
 	}
@@ -1934,7 +1934,7 @@ func CreateContext(xRefTable *XRefTable, conf *Configuration) *Context {
 
 // CreateContextWithXRefTable creates a Context with an xRefTable without pages for given configuration.
 func CreateContextWithXRefTable(conf *Configuration, pageDim *Dim) (*Context, error) {
-	xRefTable, err := createXRefTableWithRootDict()
+	xRefTable, err := CreateXRefTableWithRootDict()
 	if err != nil {
 		return nil, err
 	}
@@ -1963,12 +1963,12 @@ func fontResources(xRefTable *XRefTable, fm FontMap) (Dict, error) {
 
 	d := Dict{}
 
-	for k, fontName := range fm {
-		ir, err := createFontDict(xRefTable, fontName)
+	for fontName, font := range fm {
+		ir, err := EnsureFontDict(xRefTable, fontName, true, nil)
 		if err != nil {
 			return nil, err
 		}
-		d.Insert(k, *ir)
+		d.Insert(font.Res.ID, *ir)
 	}
 
 	return d, nil

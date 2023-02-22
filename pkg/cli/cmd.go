@@ -26,6 +26,7 @@ import (
 type Command struct {
 	Mode           pdfcpu.CommandMode
 	InFile         *string
+	inFileJSON     *string
 	InFiles        []string
 	InDir          *string
 	OutFile        *string
@@ -98,18 +99,19 @@ var cmdMap = map[pdfcpu.CommandMode]func(cmd *Command) ([]string, error){
 	pdfcpu.LISTANNOTATIONS:         processPageAnnotations,
 	pdfcpu.REMOVEANNOTATIONS:       processPageAnnotations,
 	pdfcpu.LISTIMAGES:              processImages,
+	pdfcpu.CREATE:                  Create,
 }
 
 // ValidateCommand creates a new command to validate a file.
-func ValidateCommand(inFile string, conf *pdfcpu.Configuration) *Command {
+func ValidateCommand(inFiles []string, conf *pdfcpu.Configuration) *Command {
 	if conf == nil {
 		conf = pdfcpu.NewDefaultConfiguration()
 	}
 	conf.Cmd = pdfcpu.VALIDATE
 	return &Command{
-		Mode:   pdfcpu.VALIDATE,
-		InFile: &inFile,
-		Conf:   conf}
+		Mode:    pdfcpu.VALIDATE,
+		InFiles: inFiles,
+		Conf:    conf}
 }
 
 // OptimizeCommand creates a new command to optimize a file.
@@ -751,14 +753,28 @@ func RemoveAnnotationsCommand(inFile, outFile string, pageSelection []string, ob
 }
 
 // ListImagesCommand creates a new command to list annotations for selected pages.
-func ListImagesCommand(inFile string, pageSelection []string, conf *pdfcpu.Configuration) *Command {
+func ListImagesCommand(inFiles []string, pageSelection []string, conf *pdfcpu.Configuration) *Command {
 	if conf == nil {
 		conf = pdfcpu.NewDefaultConfiguration()
 	}
 	conf.Cmd = pdfcpu.LISTIMAGES
 	return &Command{
 		Mode:          pdfcpu.LISTIMAGES,
-		InFile:        &inFile,
+		InFiles:       inFiles,
 		PageSelection: pageSelection,
 		Conf:          conf}
+}
+
+// CreateCommand creates a new command to create a PDF file.
+func CreateCommand(inFileJSON, inFilePDF, outFilePDF string, conf *pdfcpu.Configuration) *Command {
+	if conf == nil {
+		conf = pdfcpu.NewDefaultConfiguration()
+	}
+	conf.Cmd = pdfcpu.OPTIMIZE
+	return &Command{
+		Mode:       pdfcpu.CREATE,
+		inFileJSON: &inFileJSON,
+		InFile:     &inFilePDF,
+		OutFile:    &outFilePDF,
+		Conf:       conf}
 }

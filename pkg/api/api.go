@@ -17,18 +17,20 @@
 // Package api lets you integrate pdfcpu's operations into your Go backend.
 //
 // There are two api layers supporting all pdfcpu operations:
-//  1) The file based layer (used by pdfcpu's cli)
-//  2) The io.ReadSeeker/io.Writer based layer for backend integration.
+//  1. The file based layer (used by pdfcpu's cli)
+//  2. The io.ReadSeeker/io.Writer based layer for backend integration.
 //
 // For any pdfcpu command there are two functions.
 //
 // The file based function always calls the io.ReadSeeker/io.Writer based function:
-//  func CommandFile(inFile, outFile string, conf *pdf.Configuration) error
-//  func Command(rs io.ReadSeeker, w io.Writer, conf *pdf.Configuration) error
+//
+//	func CommandFile(inFile, outFile string, conf *pdf.Configuration) error
+//	func Command(rs io.ReadSeeker, w io.Writer, conf *pdf.Configuration) error
 //
 // eg. for optimization:
-//  func OptimizeFile(inFile, outFile string, conf *pdf.Configuration) error
-//  func Optimize(rs io.ReadSeeker, w io.Writer, conf *pdf.Configuration) error
+//
+//	func OptimizeFile(inFile, outFile string, conf *pdf.Configuration) error
+//	func Optimize(rs io.ReadSeeker, w io.Writer, conf *pdf.Configuration) error
 package api
 
 import (
@@ -170,8 +172,8 @@ func DisableConfigDir() {
 
 // LoadConfiguration locates and loads the default configuration
 // and also loads installed user fonts.
-func LoadConfiguration() {
+func LoadConfiguration() *pdfcpu.Configuration {
 	// Call if you don't have a specific config dir location
 	// and need to use user fonts for stamping or watermarking.
-	pdfcpu.NewDefaultConfiguration()
+	return pdfcpu.NewDefaultConfiguration()
 }

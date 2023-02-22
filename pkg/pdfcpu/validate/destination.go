@@ -30,7 +30,7 @@ func validateDestinationArrayFirstElement(xRefTable *pdf.XRefTable, a pdf.Array)
 
 	switch o := o.(type) {
 
-	case pdf.Integer: // no further processing
+	case pdf.Integer, pdf.Name: // no further processing
 
 	case pdf.Dict:
 		if o.Type() == nil || (*o.Type() != "Page" && *o.Type() != "Pages") {
@@ -38,7 +38,7 @@ func validateDestinationArrayFirstElement(xRefTable *pdf.XRefTable, a pdf.Array)
 		}
 
 	default:
-		err = errors.Errorf("pdfcpu: validateDestinationArrayFirstElement: first element must be a pageDict indRef or an integer: %v", o)
+		err = errors.Errorf("pdfcpu: validateDestinationArrayFirstElement: first element must be a pageDict indRef or an integer: %v (%T)", o, o)
 	}
 
 	return o, err
@@ -46,7 +46,7 @@ func validateDestinationArrayFirstElement(xRefTable *pdf.XRefTable, a pdf.Array)
 
 func validateDestinationArrayLength(a pdf.Array) bool {
 	l := len(a)
-	return l == 2 || l == 3 || l == 5 || l == 6
+	return l == 2 || l == 3 || l == 5 || l == 6 || l == 4 // 4 = hack! see below
 }
 
 func validateDestinationArray(xRefTable *pdf.XRefTable, a pdf.Array) error {
@@ -59,14 +59,21 @@ func validateDestinationArray(xRefTable *pdf.XRefTable, a pdf.Array) error {
 	}
 
 	if !validateDestinationArrayLength(a) {
-		return errors.New("pdfcpu: validateDestinationArray: invalid length")
+		return errors.Errorf("pdfcpu: validateDestinationArray: invalid length: %d", len(a))
 	}
+
+	// NOTE if len == 4 we possible have a missing first element, which should be an indRef to the dest page.
+	// TODO Investigate.
+	i := 1
+	// if len(a) == 4 {
+	// 	i = 0
+	// }
 
 	// Validate rest of array elements.
 
-	name, ok := a[1].(pdf.Name)
+	name, ok := a[i].(pdf.Name)
 	if !ok {
-		return errors.New("pdfcpu: validateDestinationArray: second element must be a name")
+		return errors.Errorf("pdfcpu: validateDestinationArray: second element must be a name %v (%d)", a[i], i)
 	}
 
 	var nameErr bool
@@ -82,6 +89,12 @@ func validateDestinationArray(xRefTable *pdf.XRefTable, a pdf.Array) error {
 
 	case 3:
 		nameErr = name.Value() != "FitH" && name.Value() != "FitV" && name.Value() != "FitBH"
+
+	case 4:
+		// TODO Cleanup
+		// hack for i381 - possibly zoom == null or 0
+		// eg. [(886 0 R) XYZ 53 303]
+		nameErr = name.Value() != "XYZ"
 
 	case 5:
 		nameErr = name.Value() != "XYZ"

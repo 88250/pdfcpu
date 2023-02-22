@@ -320,7 +320,11 @@ func validateFontDescriptor(xRefTable *pdf.XRefTable, d pdf.Dict, fontDictName s
 		}
 
 		// Lang, optional, name
-		_, err = validateNameEntry(xRefTable, d1, dictName, "Lang", OPTIONAL, pdf.V15, nil)
+		sinceVersion := pdf.V15
+		if xRefTable.ValidationMode == pdf.ValidationRelaxed {
+			sinceVersion = pdf.V14
+		}
+		_, err = validateNameEntry(xRefTable, d1, dictName, "Lang", OPTIONAL, sinceVersion, nil)
 		if err != nil {
 			return err
 		}
@@ -525,7 +529,7 @@ func validateCIDFontDictEntryCIDToGIDMap(xRefTable *pdf.XRefTable, d pdf.Dict, i
 
 	if o, found := d.Find("CIDToGIDMap"); found {
 
-		if !isCIDFontType2 {
+		if xRefTable.ValidationMode == pdf.ValidationStrict && !isCIDFontType2 {
 			return errors.New("pdfcpu: validateCIDFontDict: entry CIDToGIDMap not allowed - must be CIDFontType2")
 		}
 
