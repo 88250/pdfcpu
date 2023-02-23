@@ -62,23 +62,7 @@ func ListAnnotationsFile(inFile string, selectedPages []string, conf *pdfcpu.Con
 }
 
 // ListToCLinks 返回 PDF 中的大纲链接。
-func ListToCLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
-	f, err := os.Open(inFile)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-
-	conf := pdfcpu.NewDefaultConfiguration()
-	conf.Cmd = pdfcpu.LISTANNOTATIONS
-	ctx, _, _, _, err := readValidateAndOptimize(f, conf, time.Now())
-	if err != nil {
-		return
-	}
-	if err = ctx.EnsurePageCount(); err != nil {
-		return
-	}
-
+func ListToCLinks(ctx *pdfcpu.Context) (ret []pdfcpu.LinkAnnotation, err error) {
 	for pg, annos := range ctx.PageAnnots {
 		for k, v := range annos {
 			if pdfcpu.AnnLink == k {
@@ -99,23 +83,7 @@ func ListToCLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
 
 // ListLinks 返回 PDF 中的超链接。
 // SiYuan
-func ListLinks(inFile string) (assets, others []pdfcpu.LinkAnnotation, err error) {
-	f, err := os.Open(inFile)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-
-	conf := pdfcpu.NewDefaultConfiguration()
-	conf.Cmd = pdfcpu.LISTANNOTATIONS
-	ctx, _, _, _, err := readValidateAndOptimize(f, conf, time.Now())
-	if err != nil {
-		return
-	}
-	if err = ctx.EnsurePageCount(); err != nil {
-		return
-	}
-
+func ListLinks(ctx *pdfcpu.Context) (assets, others []pdfcpu.LinkAnnotation, err error) {
 	for pg, annos := range ctx.PageAnnots {
 		for k, v := range annos {
 			if pdfcpu.AnnLink == k {
