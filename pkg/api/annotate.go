@@ -97,9 +97,9 @@ func ListToCLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
 	return
 }
 
-// ListAssetLinks 返回 PDF 中的资源文件链接。
+// ListLinks 返回 PDF 中的超链接。
 // SiYuan
-func ListAssetLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
+func ListLinks(inFile string) (assets, others []pdfcpu.LinkAnnotation, err error) {
 	f, err := os.Open(inFile)
 	if err != nil {
 		return
@@ -121,10 +121,12 @@ func ListAssetLinks(inFile string) (ret []pdfcpu.LinkAnnotation, err error) {
 			if pdfcpu.AnnLink == k {
 				for _, va := range v {
 					link := va.ContentString()
+					l := va.(pdfcpu.LinkAnnotation)
+					l.Page = pg
 					if strings.HasPrefix(link, "http://127.0.0.1:6806/") && strings.Contains(link, "/assets/") {
-						l := va.(pdfcpu.LinkAnnotation)
-						l.Page = pg
-						ret = append(ret, l)
+						assets = append(assets, l)
+					} else {
+						others = append(others, l)
 					}
 				}
 			}
