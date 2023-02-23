@@ -36,7 +36,7 @@ func TestAddSimpleBookmarks(t *testing.T) {
 
 	// TODO Emoji support!
 
-	bms := []pdfcpu.Bookmark{
+	bms := []*pdfcpu.Bookmark{
 		{PageFrom: 1, Title: "Page 1: Applicant’s Form"},
 		{PageFrom: 2, Title: "Page 2: Bold 这是一个测试", Bold: true},
 		{PageFrom: 3, Title: "Page 3: Italic 测试 尾巴", Italic: true, Bold: true},
@@ -57,14 +57,14 @@ func TestAddBookmarkTree2Levels(t *testing.T) {
 	inFile := filepath.Join(inDir, "CenterOfWhy.pdf")
 	outFile := filepath.Join("..", "..", "samples", "bookmarks", "bookmarkTree.pdf")
 
-	bms := []pdfcpu.Bookmark{
+	bms := []*pdfcpu.Bookmark{
 		{PageFrom: 1, Title: "Page 1: Level 1", Color: &pdfcpu.Green,
-			Children: []pdfcpu.Bookmark{
+			Children: []*pdfcpu.Bookmark{
 				{PageFrom: 2, Title: "Page 2: Level 1.1"},
 				{PageFrom: 3, Title: "Page 3: Level 1.2"},
 			}},
 		{PageFrom: 5, Title: "Page 5: Level 2", Color: &pdfcpu.Blue,
-			Children: []pdfcpu.Bookmark{
+			Children: []*pdfcpu.Bookmark{
 				{PageFrom: 6, Title: "Page 6: Level 2.1"},
 				{PageFrom: 7, Title: "Page 7: Level 2.2"},
 				{PageFrom: 8, Title: "Page 8: Level 2.3"},
