@@ -91,7 +91,7 @@ func ListLinks(ctx *pdfcpu.Context) (assets, others []pdfcpu.LinkAnnotation, err
 					link := va.ContentString()
 					l := va.(pdfcpu.LinkAnnotation)
 					l.Page = pg
-					if strings.HasPrefix(link, "http://127.0.0.1:6806/") && strings.Contains(link, "/assets/") {
+					if strings.HasPrefix(link, "http://127.0.0.1:") && strings.Contains(link, "/assets/") {
 						assets = append(assets, l)
 					} else {
 						others = append(others, l)
