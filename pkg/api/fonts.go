@@ -66,7 +66,8 @@ func ListFonts() ([]string, error) {
 func InstallFonts(fileNames []string) error {
 	log.CLI.Printf("installing to %s...", font.UserFontDir)
 	for _, fn := range fileNames {
-		switch filepath.Ext(fn) {
+		ext := strings.ToLower(filepath.Ext(fn)) // SiYuan
+		switch ext {
 		case ".ttf":
 			//log.CLI.Println(filepath.Base(fn))
 			if err := font.InstallTrueTypeFont(font.UserFontDir, fn); err != nil {
