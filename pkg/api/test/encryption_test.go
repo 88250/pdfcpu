@@ -17,68 +17,70 @@ limitations under the License.
 package test
 
 import (
+	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
-	"github.com/88250/pdfcpu/pkg/api"
-	pdf "github.com/88250/pdfcpu/pkg/pdfcpu"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
-func confForAlgorithm(aes bool, keyLength int, upw, opw string) *pdf.Configuration {
+func listPermissions(t *testing.T, fileName string) ([]string, error) {
+	t.Helper()
+
+	msg := "listPermissions"
+
+	f, err := os.Open(fileName)
+	if err != nil {
+		t.Fatalf("%s open: %v\n", msg, err)
+	}
+	defer f.Close()
+
+	conf := model.NewDefaultConfiguration()
+	conf.Cmd = model.LISTPERMISSIONS
+
+	ctx, err := api.ReadValidateAndOptimize(f, conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return pdfcpu.Permissions(ctx), nil
+}
+
+func confForAlgorithm(aes bool, keyLength int, upw, opw string) *model.Configuration {
 	if aes {
-		return pdf.NewAESConfiguration(upw, opw, keyLength)
+		return model.NewAESConfiguration(upw, opw, keyLength)
 	}
-	return pdf.NewRC4Configuration(upw, opw, keyLength)
-}
-
-func ensureFullAccess(t *testing.T, listPermOutput []string) {
-	t.Helper()
-	if len(listPermOutput) == 0 || listPermOutput[0] != "Full access" {
-		t.Fail()
-	}
-}
-
-func ensurePermissionsNone(t *testing.T, listPermOutput []string) {
-	t.Helper()
-	if len(listPermOutput) == 0 || !strings.HasPrefix(listPermOutput[0], "permission bits:            0") {
-		t.Fail()
-	}
-}
-
-func ensurePermissionsAll(t *testing.T, listPermOutput []string) {
-	t.Helper()
-	if len(listPermOutput) == 0 || listPermOutput[0] != "permission bits: 111100111100" {
-		t.Fail()
-	}
+	return model.NewRC4Configuration(upw, opw, keyLength)
 }
 
 func setPermissions(t *testing.T, aes bool, keyLength int, msg, outFile string) {
 	t.Helper()
 	// Set all permissions of encrypted file w/o passwords should fail.
 	conf := confForAlgorithm(aes, keyLength, "", "")
-	conf.Permissions = pdf.PermissionsAll
+	conf.Permissions = model.PermissionsAll
 	if err := api.SetPermissionsFile(outFile, "", conf); err == nil {
 		t.Fatalf("%s: set all permissions w/o pw for %s\n", msg, outFile)
 	}
 
 	// Set all permissions of encrypted file with user password should fail.
 	conf = confForAlgorithm(aes, keyLength, "upw", "")
-	conf.Permissions = pdf.PermissionsAll
+	conf.Permissions = model.PermissionsAll
 	if err := api.SetPermissionsFile(outFile, "", conf); err == nil {
 		t.Fatalf("%s: set all permissions w/o opw for %s\n", msg, outFile)
 	}
 
 	// Set all permissions of encrypted file with owner password should fail.
 	conf = confForAlgorithm(aes, keyLength, "", "opw")
-	conf.Permissions = pdf.PermissionsAll
+	conf.Permissions = model.PermissionsAll
 	if err := api.SetPermissionsFile(outFile, "", conf); err == nil {
 		t.Fatalf("%s: set all permissions w/o both pws for %s\n", msg, outFile)
 	}
 
 	// Set all permissions of encrypted file using both passwords.
 	conf = confForAlgorithm(aes, keyLength, "upw", "opw")
-	conf.Permissions = pdf.PermissionsAll
+	conf.Permissions = model.PermissionsAll
 	if err := api.SetPermissionsFile(outFile, "", conf); err != nil {
 		t.Fatalf("%s: set all permissions for %s: %v\n", msg, outFile, err)
 	}
@@ -89,8 +91,9 @@ func setPermissions(t *testing.T, aes bool, keyLength int, msg, outFile string) 
 	if err != nil {
 		t.Fatalf("%s: get permissions %s: %v\n", msg, outFile, err)
 	}
+
 	// Ensure permissions all.
-	if p == nil || *p != pdf.PermissionsAll {
+	if p == nil || uint16(*p) != uint16(model.PermissionsAll) {
 		t.Fatal()
 	}
 
@@ -121,7 +124,7 @@ func testEncryption(t *testing.T, fileName string, alg string, keyLength int) {
 	}
 
 	// List permissions of encrypted file w/o passwords should fail.
-	if list, err := api.ListPermissionsFile(outFile, nil); err == nil {
+	if list, err := listPermissions(t, outFile); err == nil {
 		t.Fatalf("%s: list permissions w/o pw %s: %v\n", msg, outFile, list)
 	}
 
@@ -132,7 +135,7 @@ func testEncryption(t *testing.T, fileName string, alg string, keyLength int) {
 		t.Fatalf("%s: get permissions %s: %v\n", msg, inFile, err)
 	}
 	// Ensure permissions none.
-	if p == nil || *p != pdf.PermissionsNone {
+	if p == nil || uint16(*p) != uint16(model.PermissionsNone) {
 		t.Fatal()
 	}
 
@@ -143,7 +146,7 @@ func testEncryption(t *testing.T, fileName string, alg string, keyLength int) {
 		t.Fatalf("%s: get permissions %s: %v\n", msg, inFile, err)
 	}
 	// Ensure permissions none.
-	if p == nil || *p != pdf.PermissionsNone {
+	if p == nil || uint16(*p) != uint16(model.PermissionsNone) {
 		t.Fatal()
 	}
 
@@ -176,12 +179,54 @@ func testEncryption(t *testing.T, fileName string, alg string, keyLength int) {
 func TestEncryption(t *testing.T) {
 	for _, fileName := range []string{
 		"5116.DCT_Filter.pdf",
-		"networkProgr.pdf",
+		"adobe_errata.pdf",
 	} {
 		testEncryption(t, fileName, "rc4", 40)
 		testEncryption(t, fileName, "rc4", 128)
 		testEncryption(t, fileName, "aes", 40)
 		testEncryption(t, fileName, "aes", 128)
 		testEncryption(t, fileName, "aes", 256)
+	}
+}
+
+func TestPDF20Encryption(t *testing.T) {
+	// PDF 2.0 encryption assumes aes/256.
+	for _, fileName := range []string{
+		"i277.pdf",
+		"imageWithBPC.pdf",
+		"pageLevelOutputIntent.pdf",
+		"SimplePDF2.0.pdf",
+		"utf8stringAndAnnotation.pdf",
+		"utf8test.pdf",
+		"viaIncrementalSave.pdf",
+		"withOffsetStart.pdf",
+	} {
+		testEncryption(t, filepath.Join("pdf20", fileName), "aes", 256)
+	}
+}
+
+func TestSetPermissions(t *testing.T) {
+	msg := "TestSetPermissions"
+	inFile := filepath.Join(inDir, "5116.DCT_Filter.pdf")
+	outFile := filepath.Join(outDir, "out.pdf")
+
+	conf := confForAlgorithm(true, 256, "upw", "opw")
+	permNew := model.PermissionsNone | model.PermissionPrintRev2 | model.PermissionPrintRev3
+	conf.Permissions = permNew
+
+	if err := api.EncryptFile(inFile, outFile, conf); err != nil {
+		t.Fatalf("%s: encrypt %s: %v\n", msg, outFile, err)
+	}
+
+	conf = confForAlgorithm(true, 256, "upw", "opw")
+	p, err := api.GetPermissionsFile(outFile, conf)
+	if err != nil {
+		t.Fatalf("%s: get permissions %s: %v\n", msg, outFile, err)
+	}
+	if p == nil {
+		t.Fatalf("%s: missing permissions", msg)
+	}
+	if uint16(*p) != uint16(permNew) {
+		t.Fatalf("%s: got: %d want: %d", msg, uint16(*p), uint16(permNew))
 	}
 }

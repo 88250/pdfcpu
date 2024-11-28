@@ -1,12 +1,15 @@
-module github.com/88250/pdfcpu
+module github.com/pdfcpu/pdfcpu
 
-go 1.18
+go 1.22
 
 require (
-	github.com/hhrutter/lzw v0.0.0-20190829144645-6f07a24e8650
-	github.com/hhrutter/tiff v0.0.0-20190829141212-736cae8d0bc7
+	github.com/hhrutter/lzw v1.0.0
+	github.com/hhrutter/tiff v1.0.1
+	github.com/mattn/go-runewidth v0.0.16
 	github.com/pkg/errors v0.9.1
-	golang.org/x/image v0.0.0-20220321031419-a8550c1d254a
-	golang.org/x/text v0.3.7
+	golang.org/x/image v0.21.0
+	golang.org/x/text v0.19.0
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+require github.com/rivo/uniseg v0.4.7 // indirect

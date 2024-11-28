@@ -20,21 +20,30 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
 var (
-	fileStats, mode, selectedPages  string
-	upw, opw, key, perm, unit, conf string
-	verbose, veryVerbose            bool
-	links, quiet, sorted            bool
-	needStackTrace                  = true
-	cmdMap                          commandMap
+	fileStats, mode, selectedPages           string
+	upw, opw, key, perm, unit, conf          string
+	verbose, veryVerbose                     bool
+	links, quiet, offline                    bool
+	replaceBookmarks                         bool // Import Bookmarks
+	all                                      bool // List Viewer Preferences
+	fonts                                    bool // Info
+	json                                     bool // List Viewer Preferences, Info
+	bookmarks, dividerPage, optimize, sorted bool // Merge
+	bookmarksSet, offlineSet, optimizeSet    bool
+	needStackTrace                           = true
+	cmdMap                                   commandMap
 )
 
 // Set by Goreleaser.
 var (
-	commit = "?"
-	date   = "?"
+	version = model.VersionStr
+	commit  = "?"
+	date    = "?"
 )
 
 func init() {

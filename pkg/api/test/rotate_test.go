@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/88250/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
 )
 
 func TestRotate(t *testing.T) {

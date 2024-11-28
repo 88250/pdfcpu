@@ -17,7 +17,7 @@ limitations under the License.
 package cli
 
 import (
-	"github.com/88250/pdfcpu/pkg/pdfcpu"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pkg/errors"
 )
 
@@ -38,48 +38,117 @@ func Process(cmd *Command) (out []string, err error) {
 	return nil, errors.Errorf("pdfcpu: process: Unknown command mode %d\n", cmd.Mode)
 }
 
-func processPageAnnotations(cmd *Command) (out []string, err error) {
-	switch cmd.Mode {
-
-	case pdfcpu.LISTANNOTATIONS:
-		out, err = ListAnnotations(cmd)
-
-	case pdfcpu.REMOVEANNOTATIONS:
-		out, err = RemoveAnnotations(cmd)
-	}
-
-	return out, err
-}
-
 func processAttachments(cmd *Command) (out []string, err error) {
 	switch cmd.Mode {
 
-	case pdfcpu.LISTATTACHMENTS:
+	case model.LISTATTACHMENTS:
 		out, err = ListAttachments(cmd)
 
-	case pdfcpu.ADDATTACHMENTS, pdfcpu.ADDATTACHMENTSPORTFOLIO:
+	case model.ADDATTACHMENTS, model.ADDATTACHMENTSPORTFOLIO:
 		out, err = AddAttachments(cmd)
 
-	case pdfcpu.REMOVEATTACHMENTS:
+	case model.REMOVEATTACHMENTS:
 		out, err = RemoveAttachments(cmd)
 
-	case pdfcpu.EXTRACTATTACHMENTS:
+	case model.EXTRACTATTACHMENTS:
 		out, err = ExtractAttachments(cmd)
 	}
 
 	return out, err
 }
 
+func processBookmarks(cmd *Command) (out []string, err error) {
+	switch cmd.Mode {
+
+	case model.LISTBOOKMARKS:
+		return ListBookmarks(cmd)
+
+	case model.EXPORTBOOKMARKS:
+		return ExportBookmarks(cmd)
+
+	case model.IMPORTBOOKMARKS:
+		return ImportBookmarks(cmd)
+
+	case model.REMOVEBOOKMARKS:
+		return RemoveBookmarks(cmd)
+	}
+
+	return nil, nil
+}
+
+func processEncryption(cmd *Command) (out []string, err error) {
+	switch cmd.Mode {
+
+	case model.ENCRYPT:
+		return Encrypt(cmd)
+
+	case model.DECRYPT:
+		return Decrypt(cmd)
+
+	case model.CHANGEUPW:
+		return ChangeUserPassword(cmd)
+
+	case model.CHANGEOPW:
+		return ChangeOwnerPassword(cmd)
+	}
+
+	return nil, nil
+}
+
+func processForm(cmd *Command) (out []string, err error) {
+	switch cmd.Mode {
+
+	case model.LISTFORMFIELDS:
+		return ListFormFields(cmd)
+
+	case model.REMOVEFORMFIELDS:
+		return RemoveFormFields(cmd)
+
+	case model.LOCKFORMFIELDS:
+		return LockFormFields(cmd)
+
+	case model.UNLOCKFORMFIELDS:
+		return UnlockFormFields(cmd)
+
+	case model.RESETFORMFIELDS:
+		return ResetFormFields(cmd)
+
+	case model.EXPORTFORMFIELDS:
+		return ExportFormFields(cmd)
+
+	case model.FILLFORMFIELDS:
+		return FillFormFields(cmd)
+
+	case model.MULTIFILLFORMFIELDS:
+		return MultiFillFormFields(cmd)
+	}
+
+	return nil, nil
+}
+
+func processImages(cmd *Command) (out []string, err error) {
+	switch cmd.Mode {
+
+	case model.LISTIMAGES:
+		return ListImages(cmd)
+
+	case model.UPDATEIMAGES:
+		return UpdateImages(cmd)
+	}
+
+	return nil, nil
+}
+
 func processKeywords(cmd *Command) (out []string, err error) {
 	switch cmd.Mode {
 
-	case pdfcpu.LISTKEYWORDS:
+	case model.LISTKEYWORDS:
 		out, err = ListKeywords(cmd)
 
-	case pdfcpu.ADDKEYWORDS:
+	case model.ADDKEYWORDS:
 		out, err = AddKeywords(cmd)
 
-	case pdfcpu.REMOVEKEYWORDS:
+	case model.REMOVEKEYWORDS:
 		out, err = RemoveKeywords(cmd)
 
 	}
@@ -87,50 +156,65 @@ func processKeywords(cmd *Command) (out []string, err error) {
 	return out, err
 }
 
-func processProperties(cmd *Command) (out []string, err error) {
+func processPageAnnotations(cmd *Command) (out []string, err error) {
 	switch cmd.Mode {
 
-	case pdfcpu.LISTPROPERTIES:
-		out, err = ListProperties(cmd)
+	case model.LISTANNOTATIONS:
+		out, err = ListAnnotations(cmd)
 
-	case pdfcpu.ADDPROPERTIES:
-		out, err = AddProperties(cmd)
-
-	case pdfcpu.REMOVEPROPERTIES:
-		out, err = RemoveProperties(cmd)
-
+	case model.REMOVEANNOTATIONS:
+		out, err = RemoveAnnotations(cmd)
 	}
 
 	return out, err
 }
 
-func processEncryption(cmd *Command) (out []string, err error) {
+func processPageBoundaries(cmd *Command) (out []string, err error) {
 	switch cmd.Mode {
 
-	case pdfcpu.ENCRYPT:
-		return Encrypt(cmd)
+	case model.LISTBOXES:
+		return ListBoxes(cmd)
 
-	case pdfcpu.DECRYPT:
-		return Decrypt(cmd)
+	case model.ADDBOXES:
+		return AddBoxes(cmd)
 
-	case pdfcpu.CHANGEUPW:
-		return ChangeUserPassword(cmd)
+	case model.REMOVEBOXES:
+		return RemoveBoxes(cmd)
 
-	case pdfcpu.CHANGEOPW:
-		return ChangeOwnerPassword(cmd)
+	case model.CROP:
+		return Crop(cmd)
 	}
 
 	return nil, nil
 }
 
-func processPermissions(cmd *Command) (out []string, err error) {
+func processPageLayout(cmd *Command) (out []string, err error) {
 	switch cmd.Mode {
 
-	case pdfcpu.LISTPERMISSIONS:
-		return ListPermissions(cmd)
+	case model.LISTPAGELAYOUT:
+		return ListPageLayout(cmd)
 
-	case pdfcpu.SETPERMISSIONS:
-		return SetPermissions(cmd)
+	case model.SETPAGELAYOUT:
+		return SetPageLayout(cmd)
+
+	case model.RESETPAGELAYOUT:
+		return ResetPageLayout(cmd)
+	}
+
+	return nil, nil
+}
+
+func processPageMode(cmd *Command) (out []string, err error) {
+	switch cmd.Mode {
+
+	case model.LISTPAGEMODE:
+		return ListPageMode(cmd)
+
+	case model.SETPAGEMODE:
+		return SetPageMode(cmd)
+
+	case model.RESETPAGEMODE:
+		return ResetPageMode(cmd)
 	}
 
 	return nil, nil
@@ -139,42 +223,57 @@ func processPermissions(cmd *Command) (out []string, err error) {
 func processPages(cmd *Command) (out []string, err error) {
 	switch cmd.Mode {
 
-	case pdfcpu.INSERTPAGESBEFORE, pdfcpu.INSERTPAGESAFTER:
+	case model.INSERTPAGESBEFORE, model.INSERTPAGESAFTER:
 		return InsertPages(cmd)
 
-	case pdfcpu.REMOVEPAGES:
+	case model.REMOVEPAGES:
 		return RemovePages(cmd)
 	}
 
 	return nil, nil
 }
 
-func processPageBoundaries(cmd *Command) (out []string, err error) {
+func processPermissions(cmd *Command) (out []string, err error) {
 	switch cmd.Mode {
 
-	case pdfcpu.LISTBOXES:
-		out, err = ListBoxes(cmd)
+	case model.LISTPERMISSIONS:
+		return ListPermissions(cmd)
 
-	case pdfcpu.ADDBOXES:
-		out, err = AddBoxes(cmd)
+	case model.SETPERMISSIONS:
+		return SetPermissions(cmd)
+	}
 
-	case pdfcpu.REMOVEBOXES:
-		out, err = RemoveBoxes(cmd)
+	return nil, nil
+}
 
-	case pdfcpu.CROP:
-		out, err = Crop(cmd)
+func processProperties(cmd *Command) (out []string, err error) {
+	switch cmd.Mode {
+
+	case model.LISTPROPERTIES:
+		out, err = ListProperties(cmd)
+
+	case model.ADDPROPERTIES:
+		out, err = AddProperties(cmd)
+
+	case model.REMOVEPROPERTIES:
+		out, err = RemoveProperties(cmd)
 
 	}
 
 	return out, err
 }
 
-func processImages(cmd *Command) (out []string, err error) {
+func processViewerPreferences(cmd *Command) (out []string, err error) {
 	switch cmd.Mode {
 
-	case pdfcpu.LISTIMAGES:
-		return ListImages(cmd)
+	case model.LISTVIEWERPREFERENCES:
+		return ListViewerPreferences(cmd)
 
+	case model.SETVIEWERPREFERENCES:
+		return SetViewerPreferences(cmd)
+
+	case model.RESETVIEWERPREFERENCES:
+		return ResetViewerPreferences(cmd)
 	}
 
 	return nil, nil

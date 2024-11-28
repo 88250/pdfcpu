@@ -21,18 +21,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/88250/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
 )
 
 func TestStampUserFont(t *testing.T) {
 	msg := "TestStampUserFont"
 	inFile := filepath.Join(inDir, "mountain.pdf")
 	outDir := filepath.Join("..", "..", "samples", "stamp", "text", "utf8")
-
-	api.LoadConfiguration()
-	if err := api.InstallFonts(userFonts(t, filepath.Join("..", "..", "testdata", "fonts"))); err != nil {
-		t.Fatalf("%s: %v\n", msg, err)
-	}
 
 	for _, sample := range langSamples {
 		outFile := filepath.Join(outDir, sample.lang+".pdf")

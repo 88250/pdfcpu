@@ -20,7 +20,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/88250/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 )
 
 func TestCollect(t *testing.T) {
@@ -57,7 +58,7 @@ func TestCollectLowLevel(t *testing.T) {
 	}
 
 	usePgCache := true
-	ctxNew, err := ctx.ExtractPages(selectedPages, usePgCache)
+	ctxNew, err := pdfcpu.ExtractPages(ctx, selectedPages, usePgCache)
 	if err != nil {
 		t.Fatalf("%s ExtractPages: %v\n", msg, err)
 	}

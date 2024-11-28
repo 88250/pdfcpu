@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/88250/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
 )
 
 func TestPortfolio(t *testing.T) {
@@ -47,10 +47,7 @@ func TestPortfolio(t *testing.T) {
 	}
 
 	// List portfolio entries.
-	list := listAttachments(t, msg, fileName, 4)
-	for _, s := range list {
-		t.Log(s)
-	}
+	listAttachments(t, msg, fileName, 4)
 
 	// Extract all portfolio entries.
 	if err := api.ExtractAttachmentsFile(fileName, outDir, nil, nil); err != nil {

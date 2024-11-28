@@ -23,7 +23,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/88250/pdfcpu/pkg/pdfcpu"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 )
 
 var (
@@ -33,7 +34,7 @@ var (
 
 // Command represents command meta information and details.
 type command struct {
-	handler    func(conf *pdfcpu.Configuration)
+	handler    func(conf *model.Configuration)
 	cmdMap     commandMap // Optional map of sub commands.
 	usageShort string     // Short command description.
 	usageLong  string     // Long command description.
@@ -74,6 +75,18 @@ func parseFlags(cmd *command) {
 		}
 		initLogging(verbose, veryVerbose)
 	}
+
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "bookmarks" || f.Name == "b" {
+			bookmarksSet = true
+		}
+		if f.Name == "offline" || f.Name == "off" || f.Name == "o" {
+			offlineSet = true
+		}
+		if f.Name == "optimize" || f.Name == "opt" {
+			optimizeSet = true
+		}
+	})
 }
 
 func validateConfigDirFlag() {
@@ -91,23 +104,22 @@ func validateConfigDirFlag() {
 			fmt.Fprintf(os.Stderr, "conf: %s not a directory\n\n", conf)
 			os.Exit(1)
 		}
-		pdfcpu.ConfigPath = conf
+		model.ConfigPath = conf
 		return
 	}
 	if conf == "disable" {
-		pdfcpu.ConfigPath = "disable"
+		model.ConfigPath = "disable"
 	}
 }
 
-func ensureDefaultConfig() (*pdfcpu.Configuration, error) {
+func ensureDefaultConfig() (*model.Configuration, error) {
 	validateConfigDirFlag()
-	//fmt.Printf("conf = %s\n", pdfcpu.ConfigPath)
-	if !pdfcpu.MemberOf(pdfcpu.ConfigPath, []string{"default", "disable"}) {
-		if err := pdfcpu.EnsureDefaultConfigAt(pdfcpu.ConfigPath); err != nil {
+	if !types.MemberOf(model.ConfigPath, []string{"default", "disable"}) {
+		if err := model.EnsureDefaultConfigAt(model.ConfigPath, false); err != nil {
 			return nil, err
 		}
 	}
-	return pdfcpu.NewDefaultConfiguration(), nil
+	return model.NewDefaultConfiguration(), nil
 }
 
 // process applies command completion and if successful processes the resulting command.
@@ -139,7 +151,16 @@ func (m commandMap) process(cmdPrefix string, command string) (string, error) {
 	conf.OwnerPW = opw
 	conf.UserPW = upw
 
+	if offlineSet {
+		conf.Offline = offline
+	}
+
 	if m[cmdStr].handler != nil {
+
+		if conf.Version != model.VersionStr && cmdStr != "reset" {
+			model.CheckConfigVersion(conf.Version)
+		}
+
 		m[cmdStr].handler(conf)
 		return command, nil
 	}

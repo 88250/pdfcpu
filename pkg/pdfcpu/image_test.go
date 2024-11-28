@@ -21,18 +21,20 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/88250/pdfcpu/pkg/filter"
+	"github.com/pdfcpu/pdfcpu/pkg/filter"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 	"github.com/pkg/errors"
 )
 
 var inDir, outDir string
-var xRefTable *XRefTable
+var xRefTable *model.XRefTable
 
 func TestMain(m *testing.M) {
 
@@ -42,13 +44,11 @@ func TestMain(m *testing.M) {
 
 	xRefTable, err = CreateXRefTableWithRootDict()
 	if err != nil {
-		//fmt.Printf("%v", err)
 		os.Exit(1)
 	}
 
-	outDir, err = ioutil.TempDir("", "pdfcpu_imageTests")
+	outDir, err = os.MkdirTemp("", "pdfcpu_imageTests")
 	if err != nil {
-		//fmt.Printf("%v", err)
 		os.Exit(1)
 	}
 
@@ -57,9 +57,9 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func streamDictForJPGFile(xRefTable *XRefTable, fileName string) (*StreamDict, error) {
+func streamDictForJPGFile(xRefTable *model.XRefTable, fileName string) (*types.StreamDict, error) {
 
-	bb, err := ioutil.ReadFile(fileName)
+	bb, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -74,20 +74,20 @@ func streamDictForJPGFile(xRefTable *XRefTable, fileName string) (*StreamDict, e
 	switch c.ColorModel {
 
 	case color.GrayModel:
-		cs = DeviceGrayCS
+		cs = model.DeviceGrayCS
 
 	case color.YCbCrModel:
-		cs = DeviceRGBCS
+		cs = model.DeviceRGBCS
 
 	case color.CMYKModel:
-		cs = DeviceCMYKCS
+		cs = model.DeviceCMYKCS
 
 	default:
 		return nil, errors.New("pdfcpu: unexpected color model for JPEG")
 
 	}
 
-	sd, err := createDCTImageObject(xRefTable, bb, c.Width, c.Height, 8, cs)
+	sd, err := model.CreateDCTImageObject(xRefTable, bb, c.Width, c.Height, 8, cs)
 	if err != nil {
 		return nil, err
 	}
@@ -100,14 +100,14 @@ func streamDictForJPGFile(xRefTable *XRefTable, fileName string) (*StreamDict, e
 	return sd, nil
 }
 
-func streamDictForImageFile(xRefTable *XRefTable, fileName string) (*StreamDict, error) {
+func streamDictForImageFile(xRefTable *model.XRefTable, fileName string) (*types.StreamDict, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	sd, _, _, err := CreateImageStreamDict(xRefTable, f, false, false)
+	sd, _, _, err := model.CreateImageStreamDict(xRefTable, f, false, false)
 	return sd, err
 }
 
@@ -120,7 +120,7 @@ func compare(t *testing.T, fn1, fn2 string) {
 	}
 	defer f1.Close()
 
-	bb1, err := ioutil.ReadAll(f1)
+	bb1, err := io.ReadAll(f1)
 	if err != nil {
 		t.Errorf("%s: %v", fn1, err)
 		return
@@ -133,7 +133,7 @@ func compare(t *testing.T, fn1, fn2 string) {
 	}
 	defer f1.Close()
 
-	bb2, err := ioutil.ReadAll(f2)
+	bb2, err := io.ReadAll(f2)
 	if err != nil {
 		t.Errorf("%s: %v", fn2, err)
 		return
@@ -153,7 +153,7 @@ func compare(t *testing.T, fn1, fn2 string) {
 
 }
 
-func printOptionalSMask(t *testing.T, sd *StreamDict) {
+func printOptionalSMask(t *testing.T, sd *types.StreamDict) {
 	o := sd.IndirectRefEntry("SMask")
 	if o != nil {
 		sm, err := xRefTable.Dereference(*o)
@@ -217,7 +217,7 @@ func TestReadWritePNGAndWEBP(t *testing.T) {
 }
 
 // Read in a device gray image stream dump from disk.
-func read1BPCDeviceGrayFlateStreamDump(xRefTable *XRefTable, fileName string) (*StreamDict, error) {
+func read1BPCDeviceGrayFlateStreamDump(xRefTable *model.XRefTable, fileName string) (*types.StreamDict, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
@@ -225,25 +225,25 @@ func read1BPCDeviceGrayFlateStreamDump(xRefTable *XRefTable, fileName string) (*
 	defer f.Close()
 
 	// Read in a flate encoded stream.
-	buf, err := ioutil.ReadAll(f)
+	buf, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
 
-	sd := &StreamDict{
-		Dict: Dict(
-			map[string]Object{
-				"Type":             Name("XObject"),
-				"Subtype":          Name("Image"),
-				"Width":            Integer(1161),
-				"Height":           Integer(392),
-				"BitsPerComponent": Integer(1),
-				"ColorSpace":       Name(DeviceGrayCS),
-				"Decode":           NewNumberArray(1, 0),
+	sd := &types.StreamDict{
+		Dict: types.Dict(
+			map[string]types.Object{
+				"Type":             types.Name("XObject"),
+				"Subtype":          types.Name("Image"),
+				"Width":            types.Integer(1161),
+				"Height":           types.Integer(392),
+				"BitsPerComponent": types.Integer(1),
+				"ColorSpace":       types.Name(model.DeviceGrayCS),
+				"Decode":           types.NewNumberArray(1, 0),
 			},
 		),
 		Raw:            buf,
-		FilterPipeline: []PDFFilter{{Name: filter.Flate, DecodeParms: nil}}}
+		FilterPipeline: []types.PDFFilter{{Name: filter.Flate, DecodeParms: nil}}}
 
 	sd.InsertName("Filter", filter.Flate)
 
@@ -305,39 +305,39 @@ func TestReadDeviceGrayWritePNG(t *testing.T) {
 }
 
 // Read in a device CMYK image stream dump from disk.
-func read8BPCDeviceCMYKFlateStreamDump(xRefTable *XRefTable, fileName string) (*StreamDict, error) {
+func read8BPCDeviceCMYKFlateStreamDump(xRefTable *model.XRefTable, fileName string) (*types.StreamDict, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	buf, err := ioutil.ReadAll(f)
+	buf, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
 
-	decodeParms := Dict(
-		map[string]Object{
-			"BitsPerComponent": Integer(8),
-			"Colors":           Integer(4),
-			"Columns":          Integer(340),
+	decodeParms := types.Dict(
+		map[string]types.Object{
+			"BitsPerComponent": types.Integer(8),
+			"Colors":           types.Integer(4),
+			"Columns":          types.Integer(340),
 		},
 	)
 
-	sd := &StreamDict{
-		Dict: Dict(
-			map[string]Object{
-				"Type":             Name("XObject"),
-				"Subtype":          Name("Image"),
-				"Width":            Integer(340),
-				"Height":           Integer(216),
-				"BitsPerComponent": Integer(8),
-				"ColorSpace":       Name(DeviceCMYKCS),
+	sd := &types.StreamDict{
+		Dict: types.Dict(
+			map[string]types.Object{
+				"Type":             types.Name("XObject"),
+				"Subtype":          types.Name("Image"),
+				"Width":            types.Integer(340),
+				"Height":           types.Integer(216),
+				"BitsPerComponent": types.Integer(8),
+				"ColorSpace":       types.Name(model.DeviceCMYKCS),
 			},
 		),
 		Raw:            buf,
-		FilterPipeline: []PDFFilter{{Name: filter.Flate, DecodeParms: decodeParms}}}
+		FilterPipeline: []types.PDFFilter{{Name: filter.Flate, DecodeParms: decodeParms}}}
 
 	sd.InsertName("Filter", filter.Flate)
 

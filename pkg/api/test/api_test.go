@@ -19,34 +19,62 @@ package test
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/88250/pdfcpu/pkg/pdfcpu"
-
-	"github.com/88250/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 )
 
-var inDir, outDir, resDir string
+var inDir, outDir, resDir, samplesDir string
+var conf *model.Configuration
 
-func imageFileNames(t *testing.T, dir string) []string {
-	t.Helper()
-	fn, err := pdfcpu.ImageFileNames(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return fn
+func isTrueType(filename string) bool {
+	s := strings.ToLower(filename)
+	return strings.HasSuffix(s, ".ttf") || strings.HasSuffix(s, ".ttc")
 }
+
+func userFonts(dir string) ([]string, error) {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	ff := []string(nil)
+	for _, f := range files {
+		if isTrueType(f.Name()) {
+			fn := filepath.Join(dir, f.Name())
+			ff = append(ff, fn)
+		}
+	}
+	return ff, nil
+}
+
 func TestMain(m *testing.M) {
 	inDir = filepath.Join("..", "..", "testdata")
 	resDir = filepath.Join(inDir, "resources")
-	var err error
+	samplesDir = filepath.Join("..", "..", "samples")
 
-	if outDir, err = ioutil.TempDir("", "pdfcpu_api_tests"); err != nil {
+	conf = api.LoadConfiguration()
+
+	// Install test user fonts from pkg/testdata/fonts.
+	fonts, err := userFonts(filepath.Join(inDir, "fonts"))
+	if err != nil {
+		fmt.Printf("%v", err)
+		os.Exit(1)
+	}
+
+	if err := api.InstallFonts(fonts); err != nil {
+		fmt.Printf("%v", err)
+		os.Exit(1)
+	}
+
+	if outDir, err = os.MkdirTemp("", "pdfcpu_api_tests"); err != nil {
 		fmt.Printf("%v", err)
 		os.Exit(1)
 	}
@@ -77,6 +105,17 @@ func copyFile(t *testing.T, srcFileName, destFileName string) error {
 	_, err = io.Copy(to, from)
 	return err
 }
+
+func imageFileNames(t *testing.T, dir string) []string {
+	t.Helper()
+	fn, err := model.ImageFileNames(dir, types.MB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(fn)
+	return fn
+}
+
 func BenchmarkValidate(b *testing.B) {
 	msg := "BenchmarkValidate"
 	b.ResetTimer()
@@ -100,7 +139,7 @@ func isPDF(filename string) bool {
 
 func AllPDFs(t *testing.T, dir string) []string {
 	t.Helper()
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		t.Fatalf("pdfFiles from %s: %v\n", dir, err)
 	}
@@ -147,6 +186,8 @@ func TestValidate(t *testing.T) {
 	msg := "TestValidate"
 	inFile := filepath.Join(inDir, "Acroforms2.pdf")
 
+	//log.SetDefaultStatsLogger()
+
 	// Validate inFile.
 	if err := api.ValidateFile(inFile, nil); err != nil {
 		t.Fatalf("%s: %v\n", msg, err)
@@ -167,11 +208,11 @@ func TestManipulateContext(t *testing.T) {
 	// Manipulate the PDF Context.
 	// Eg. Let's stamp all pages with pageCount and current timestamp.
 	text := fmt.Sprintf("Pages: %d \n Current time: %v", ctx.PageCount, time.Now())
-	wm, err := api.TextWatermark(text, "font:Times-Italic, scale:.9", true, false, pdfcpu.POINTS)
+	wm, err := api.TextWatermark(text, "font:Times-Italic, scale:.9", true, false, types.POINTS)
 	if err != nil {
 		t.Fatalf("%s: ParseTextWatermarkDetails: %v\n", msg, err)
 	}
-	if err := ctx.AddWatermarks(nil, wm); err != nil {
+	if err := pdfcpu.AddWatermarks(ctx, nil, wm); err != nil {
 		t.Fatalf("%s: WatermarkContext: %v\n", msg, err)
 	}
 
@@ -185,7 +226,17 @@ func TestInfo(t *testing.T) {
 	msg := "TestInfo"
 	inFile := filepath.Join(inDir, "5116.DCT_Filter.pdf")
 
-	if _, err := api.InfoFile(inFile, nil, nil); err != nil {
+	f, err := os.Open(inFile)
+	if err != nil {
 		t.Fatalf("%s: %v\n", msg, err)
+	}
+	defer f.Close()
+
+	info, err := api.PDFInfo(f, inFile, nil, true, conf)
+	if err != nil {
+		t.Fatalf("%s: %v\n", msg, err)
+	}
+	if info == nil {
+		t.Fatalf("%s: missing Info\n", msg)
 	}
 }

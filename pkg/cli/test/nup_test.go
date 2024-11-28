@@ -20,35 +20,35 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/88250/pdfcpu/pkg/api"
-	"github.com/88250/pdfcpu/pkg/cli"
-	"github.com/88250/pdfcpu/pkg/pdfcpu"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/cli"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
-func testNUp(t *testing.T, msg string, inFiles []string, outFile string, selectedPages []string, desc string, n int, isImg bool) {
+func testNUp(t *testing.T, msg string, inFiles []string, outFile string, selectedPages []string, desc string, n int, isImg bool, conf *model.Configuration) {
 	t.Helper()
 
 	var (
-		nup *pdfcpu.NUp
+		nup *model.NUp
 		err error
 	)
 
 	if isImg {
-		if nup, err = api.ImageNUpConfig(n, desc); err != nil {
+		if nup, err = api.ImageNUpConfig(n, desc, conf); err != nil {
 			t.Fatalf("%s %s: %v\n", msg, outFile, err)
 		}
 	} else {
-		if nup, err = api.PDFNUpConfig(n, desc); err != nil {
+		if nup, err = api.PDFNUpConfig(n, desc, conf); err != nil {
 			t.Fatalf("%s %s: %v\n", msg, outFile, err)
 		}
 	}
 
-	cmd := cli.NUpCommand(inFiles, outFile, selectedPages, nup, nil)
+	cmd := cli.NUpCommand(inFiles, outFile, selectedPages, nup, conf)
 	if _, err := cli.Process(cmd); err != nil {
 		t.Fatalf("%s %s: %v\n", msg, outFile, err)
 	}
 
-	if err := validateFile(t, outFile, nil); err != nil {
+	if err := validateFile(t, outFile, conf); err != nil {
 		t.Fatalf("%s: %v\n", msg, err)
 	}
 }
@@ -60,6 +60,7 @@ func TestNUpCommand(t *testing.T) {
 		outFile       string
 		selectedPages []string
 		desc          string
+		unit          string
 		n             int
 		isImg         bool
 	}{
@@ -68,6 +69,7 @@ func TestNUpCommand(t *testing.T) {
 			filepath.Join(outDir, "Acroforms2.pdf"),
 			nil,
 			"",
+			"points",
 			4,
 			false},
 
@@ -76,6 +78,7 @@ func TestNUpCommand(t *testing.T) {
 			filepath.Join(outDir, "out.pdf"),
 			nil,
 			"form:A3L",
+			"points",
 			9,
 			true},
 
@@ -87,10 +90,13 @@ func TestNUpCommand(t *testing.T) {
 			},
 			filepath.Join(outDir, "out1.pdf"),
 			nil,
-			"form:Tabloid, bo:off, ma:0",
+			"form:Tabloid, bo:off, ma:0, enforce:off",
+			"points",
 			6,
 			true},
 	} {
-		testNUp(t, tt.msg, tt.inFiles, tt.outFile, tt.selectedPages, tt.desc, tt.n, tt.isImg)
+		conf := model.NewDefaultConfiguration()
+		conf.SetUnit(tt.unit)
+		testNUp(t, tt.msg, tt.inFiles, tt.outFile, tt.selectedPages, tt.desc, tt.n, tt.isImg, conf)
 	}
 }

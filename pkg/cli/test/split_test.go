@@ -20,8 +20,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/88250/pdfcpu/pkg/cli"
-	"github.com/88250/pdfcpu/pkg/pdfcpu"
+	"github.com/pdfcpu/pdfcpu/pkg/cli"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
 // Split a test PDF file up into single page PDFs (using a split span of 1).
@@ -31,9 +31,7 @@ func TestSplitCommand(t *testing.T) {
 	inFile := filepath.Join(inDir, fileName)
 	span := 1
 
-	// Skip validation to boost processing.
-	conf := pdfcpu.NewDefaultConfiguration()
-	conf.ValidationMode = pdfcpu.ValidationNone
+	conf := model.NewDefaultConfiguration()
 
 	cmd := cli.SplitCommand(inFile, outDir, span, conf)
 	if _, err := cli.Process(cmd); err != nil {
@@ -48,7 +46,7 @@ func TestSplitBySpanCommand(t *testing.T) {
 	inFile := filepath.Join(inDir, fileName)
 	span := 2
 
-	cmd := cli.SplitCommand(inFile, outDir, span, nil)
+	cmd := cli.SplitCommand(inFile, outDir, span, conf)
 	if _, err := cli.Process(cmd); err != nil {
 		t.Fatalf("%s span=%d %s: %v\n", msg, span, inFile, err)
 	}
@@ -59,9 +57,26 @@ func TestSplitByBookmarkCommand(t *testing.T) {
 	msg := "TestSplitByBookmarkCommand"
 	fileName := "5116.DCT_Filter.pdf"
 	inFile := filepath.Join(inDir, fileName)
+
 	span := 0 // This means we are going to split by bookmarks.
 
-	cmd := cli.SplitCommand(inFile, outDir, span, nil)
+	cmd := cli.SplitCommand(inFile, outDir, span, conf)
+	if _, err := cli.Process(cmd); err != nil {
+		t.Fatalf("%s %s: %v\n", msg, inFile, err)
+	}
+}
+
+func TestSplitByPageNrCommand(t *testing.T) {
+	msg := "TestSplitByPageNrCommand"
+	fileName := "5116.DCT_Filter.pdf"
+	inFile := filepath.Join(inDir, fileName)
+
+	// Generate page section 1
+	// Generate page section 2-9
+	// Generate page section 10-49
+	// Generate page section 50-last page
+
+	cmd := cli.SplitByPageNrCommand(inFile, outDir, []int{2, 10, 50}, conf)
 	if _, err := cli.Process(cmd); err != nil {
 		t.Fatalf("%s %s: %v\n", msg, inFile, err)
 	}
