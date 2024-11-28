@@ -42,7 +42,7 @@ func EnsureOutlines(ctx *model.Context, fName string, append bool) error {
 		return err
 	}
 
-	first, last, total, visible, err := createOutlineItemDict(ctx, []Bookmark{{PageFrom: 1, Title: fName}}, indRef, nil)
+	first, last, total, visible, err := createOutlineItemDict(ctx, []*Bookmark{{PageFrom: 1, Title: fName}}, indRef, nil)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func mergeOutlines(fName string, p int, ctxSrc, ctxDest *model.Context) error {
 		return err
 	}
 
-	first, last, _, _, err := createOutlineItemDict(ctxDest, []Bookmark{{PageFrom: p, Title: fName}}, indRef, nil)
+	first, last, _, _, err := createOutlineItemDict(ctxDest, []*Bookmark{{PageFrom: p, Title: fName}}, indRef, nil)
 	if err != nil {
 		return err
 	}

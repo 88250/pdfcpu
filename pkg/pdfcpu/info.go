@@ -118,7 +118,7 @@ func ensureInfoDict(ctx *model.Context) error {
 
 	now := types.DateString(time.Now())
 
-	v := "pdfcpu " + model.VersionStr
+	v := model.VersionStr
 
 	if ctx.Info == nil {
 

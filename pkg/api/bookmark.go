@@ -31,7 +31,7 @@ var (
 )
 
 // Bookmarks returns rs's bookmark hierarchy.
-func Bookmarks(rs io.ReadSeeker, conf *model.Configuration) ([]pdfcpu.Bookmark, error) {
+func Bookmarks(rs io.ReadSeeker, conf *model.Configuration) ([]*pdfcpu.Bookmark, error) {
 	if rs == nil {
 		return nil, errors.New("pdfcpu: Bookmarks: missing rs")
 	}
@@ -188,7 +188,7 @@ func ImportBookmarksFile(inFilePDF, inFileJSON, outFilePDF string, replace bool,
 }
 
 // AddBookmarks adds a single bookmark outline layer to the PDF context read from rs and writes the result to w.
-func AddBookmarks(rs io.ReadSeeker, w io.Writer, bms []pdfcpu.Bookmark, replace bool, conf *model.Configuration) error {
+func AddBookmarks(rs io.ReadSeeker, w io.Writer, bms []*pdfcpu.Bookmark, replace bool, conf *model.Configuration) error {
 	if rs == nil {
 		return errors.New("pdfcpu: AddBookmarks: missing rs")
 	}
@@ -217,7 +217,7 @@ func AddBookmarks(rs io.ReadSeeker, w io.Writer, bms []pdfcpu.Bookmark, replace 
 }
 
 // AddBookmarksFile adds outlines to the PDF context read from inFile and writes the result to outFile.
-func AddBookmarksFile(inFile, outFile string, bms []pdfcpu.Bookmark, replace bool, conf *model.Configuration) (err error) {
+func AddBookmarksFile(inFile, outFile string, bms []*pdfcpu.Bookmark, replace bool, conf *model.Configuration) (err error) {
 	var f1, f2 *os.File
 
 	if f1, err = os.Open(inFile); err != nil {

@@ -58,7 +58,7 @@ type Bookmark struct {
 	Bold     bool               `json:"bold,omitempty"`
 	Italic   bool               `json:"italic,omitempty"`
 	Color    *color.SimpleColor `json:"color,omitempty"`
-	Kids     []Bookmark         `json:"kids,omitempty"`
+	Kids     []*Bookmark        `json:"kids,omitempty"`
 	Parent   *Bookmark          `json:"-"`
 
 	AbsPos float64
@@ -66,8 +66,8 @@ type Bookmark struct {
 }
 
 type BookmarkTree struct {
-	Header    Header     `json:"header"`
-	Bookmarks []Bookmark `json:"bookmarks"`
+	Header    Header      `json:"header"`
+	Bookmarks []*Bookmark `json:"bookmarks"`
 }
 
 func header(xRefTable *model.XRefTable, source string) Header {
@@ -193,8 +193,8 @@ func bookmark(d types.Dict, title string, pageFrom int, parent *Bookmark) Bookma
 }
 
 // BookmarksForOutlineItem returns the bookmarks tree for an outline item.
-func BookmarksForOutlineItem(ctx *model.Context, item *types.IndirectRef, parent *Bookmark) ([]Bookmark, error) {
-	bms := []Bookmark{}
+func BookmarksForOutlineItem(ctx *model.Context, item *types.IndirectRef, parent *Bookmark) ([]*Bookmark, error) {
+	bms := []*Bookmark{}
 
 	var (
 		d   types.Dict
@@ -255,14 +255,14 @@ func BookmarksForOutlineItem(ctx *model.Context, item *types.IndirectRef, parent
 			bm.Kids = kids
 		}
 
-		bms = append(bms, bm)
+		bms = append(bms, &bm)
 	}
 
 	return bms, nil
 }
 
 // Bookmarks returns all ctx bookmark information recursively.
-func Bookmarks(ctx *model.Context) ([]Bookmark, error) {
+func Bookmarks(ctx *model.Context) ([]*Bookmark, error) {
 
 	if err := ctx.LocateNameTree("Dests", false); err != nil {
 		return nil, err
@@ -279,7 +279,7 @@ func Bookmarks(ctx *model.Context) ([]Bookmark, error) {
 	return BookmarksForOutlineItem(ctx, first, nil)
 }
 
-func bookmarkList(bms []Bookmark, level int) ([]string, error) {
+func bookmarkList(bms []*Bookmark, level int) ([]string, error) {
 	pre := strings.Repeat("    ", level)
 	ss := []string{}
 	for _, bm := range bms {
@@ -341,7 +341,7 @@ func ExportBookmarksJSON(ctx *model.Context, source string, w io.Writer) (bool, 
 	return true, err
 }
 
-func bmDict(ctx *model.Context, bm Bookmark, parent types.IndirectRef) (types.Dict, error) {
+func bmDict(ctx *model.Context, bm *Bookmark, parent types.IndirectRef) (types.Dict, error) {
 
 	_, pageIndRef, _, err := ctx.PageDict(bm.PageFrom, false)
 	if err != nil {
@@ -383,7 +383,7 @@ func bmDict(ctx *model.Context, bm Bookmark, parent types.IndirectRef) (types.Di
 	return d, nil
 }
 
-func createOutlineItemDict(ctx *model.Context, bms []Bookmark, parent *types.IndirectRef, parentPageNr *int) (*types.IndirectRef, *types.IndirectRef, int, int, error) {
+func createOutlineItemDict(ctx *model.Context, bms []*Bookmark, parent *types.IndirectRef, parentPageNr *int) (*types.IndirectRef, *types.IndirectRef, int, int, error) {
 	var (
 		first   *types.IndirectRef
 		irPrev  *types.IndirectRef
@@ -573,7 +573,7 @@ func RemoveBookmarks(ctx *model.Context) (bool, error) {
 }
 
 // AddBookmarks adds bms to ctx.
-func AddBookmarks(ctx *model.Context, bms []Bookmark, replace bool) error {
+func AddBookmarks(ctx *model.Context, bms []*Bookmark, replace bool) error {
 
 	rootDict, err := ctx.Catalog()
 	if err != nil {
