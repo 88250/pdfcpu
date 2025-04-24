@@ -34,6 +34,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+func LoadUserFonts() error {
+	if err := font.LoadUserFonts(); err != nil {
+		return errors.Wrap(err, "pdfcpu: loading user fonts")
+	}
+	return nil
+}
+
 // ListFonts returns a list of supported fonts.
 func ListFonts() ([]string, error) {
 	// Get list of PDF core fonts.
